@@ -11,27 +11,27 @@ void systemDiagnosis()
   radio.println(depth);
   getInternalCurrent();
   radio.print(F("Internal current sensor detecting current of "));
-  //radio.println();
+  radio.println(current);
   if(!getInternalCurrent())
   {
     radio.print(F("Internal current is below acceptable value!")); 
-    missionReady = 0;
+    missionReady = false;
   }
   getInternalTemp();
   radio.print(F("Internal temperature sensor detecting temperature of "));
-  //radio.println();
+  radio.println(temperature);
   if(!getInternalTemp())
   { 
     radio.print(F("Internal temperature is above acceptable value!"));
-    missionReady = 0;
+    missionReady = false;
   }
   getInternalPressure();
   radio.print(F("Internal pressure sensor detecting pressure of "));
-  //radio.println();
+  radio.println(pressure);
   if(!getInternalPressure())
   {
     radio.print(F("Internal pressure is above acceptable value!"));
-    missionReady = 0;
+    missionReady = false;
   }
   if(getInternalLeak())
   {
@@ -40,7 +40,7 @@ void systemDiagnosis()
   else
   {
     radio.print(F("Leak detected!"));
-    missionReady = 0;
+    missionReady = false;
   }
   if(missionReady)
   {

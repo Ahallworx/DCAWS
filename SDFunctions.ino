@@ -17,7 +17,7 @@ void checkSD()
   if (!SD.begin(chipSelect))
   {
     radio.println(F("SD card initialization failed!"));
-    missionReady = 0;
+    missionReady = false;
     return;
   }
   radio.print(F("SD card initialization confirmed and found files: "));

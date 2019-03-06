@@ -10,7 +10,7 @@ void setupGPS()
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
   // Request updates on antenna status
   GPS.sendCommand(PGCMD_ANTENNA);
-  delay(1000);
+  delay(1000/*SETUP_DELAY*/);
 }
 
 void getGPS()
@@ -31,14 +31,14 @@ void getGPS()
 
 void checkGPS()
 {
-  timeout = 0;
+  gpsTimeout = 0;
   while(!newGPS)
   {
     getGPS();
-    if(timeout > MAX_GPS_TIME)
+    if(gpsTimeout > MAX_GPS_TIME)
     {
       radio.println(F("Unable to confirm GPS Fix!"));
-      missionReady = 0;
+      missionReady = false;
       break;
     }
   }
@@ -52,50 +52,51 @@ void sendGPS()
   radio.print(F(", "));
   radio.println(GPS.longitude,6);
   radio.println(F("The current averaged GPS coordinates are "));
-  radio.print(avglat,6);
+  radio.print(avgLat,6);
   radio.print(F(", "));
-  radio.println(avglon,6);
+  radio.println(avgLon,6);
 }
 
 void logGPS()
 {
   File DCAWS_GPS = SD.open("DCAWS_GPS.csv", FILE_WRITE);
-  DCAWS_GPS.print(avglat,6);
+  DCAWS_GPS.print(avgLat,6);
   DCAWS_GPS.print(", ");
-  DCAWS_GPS.println(avglon,6);
-  DCAWS_GPS.close(); 
+  DCAWS_GPS.println(avgLon,6);
+  DCAWS_GPS.close(); /////////////////////////////////////////////////maybe don't close, flush
 }
 
-void mvavg_GPS(double lat, double lon, boolean mvinit, double *latmean, double *lonmean)
+void mvavgGPS(double lat, double lon, boolean mvInit)
 {
   // These static variables are kept in memory at all time
   // and can only be used by this function
-  static double latsum, lonsum;    // cumulated latitudes/longitudes
+  double latBuffer[WINSZ_GPS], lonBuffer[WINSZ_GPS];
+  static double latSum, lonSum;    // cumulated latitudes/longitudes
   static int n;   // actual window size
   static int k;   // circular buffer index
 
   // if this is the first call, cumulated lat value = input lat/lon value
   // and window size = 1; buffer the values
-  if (mvinit == true)
+  if (mvInit == true)
   {
-    latsum = lat;
-    lonsum = lon;
+    latSum = lat;
+    lonSum = lon;
     n = 1;
     k = 0;
-    latbuffer[k] = lat;
-    lonbuffer[k] = lon;
+    latBuffer[k] = lat;
+    lonBuffer[k] = lon;
   }
   // if this is not the first call
   else
   {
     // if we have collected less points than the window size
     // cumulate the value and increment the window size
-    if (n < winsz_GPS)
+    if (n < WINSZ_GPS)
     {
-      latsum += lat;
-      latbuffer[++k] = lat;
-      lonsum += lon;
-      lonbuffer[k] = lon;
+      latSum += lat;
+      latBuffer[++k] = lat;
+      lonSum += lon;
+      lonBuffer[k] = lon;
       n++;
     }
     // if we have already collected more points than the window
@@ -105,11 +106,14 @@ void mvavg_GPS(double lat, double lon, boolean mvinit, double *latmean, double *
     else
     {
       k++;
-      k %= winsz_GPS;
-      latsum += (lat - latbuffer[k]);
-      latbuffer[k] = lat;
-      lonsum += (lon - lonbuffer[k]);
-      lonbuffer[k] = lon;
+      k %= WINSZ_GPS;
+      latSum += (lat - latBuffer[k]);
+      latBuffer[k] = lat;
+      lonSum += (lon - lonBuffer[k]);
+      lonBuffer[k] = lon;
     }
   }
+  // Calculate and return the moving average
+  /**latmean*/avgLat = latSum / (double)n;
+  /**lonmean*/avgLon = lonSum / (double)n;
 }

@@ -17,7 +17,7 @@ void checkRadio(void)
     else
     {
       radio.println(F("Either a key other than 'C' was pressed or unable to confirm comms!"));
-      missionReady = 0;
+      missionReady = false;
     }
   }
 }

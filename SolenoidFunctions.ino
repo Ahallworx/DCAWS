@@ -25,7 +25,7 @@ void takeSample(int count)
     initSample = false;
     sinceTrigger = 0;
  }
- if(sinceTrigger >= 10000)
+ if(sinceTrigger >= HOLD_TIME)
  {
   digitalWrite(solenoidPin, LOW);
   targetCount++;

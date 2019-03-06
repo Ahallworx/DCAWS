@@ -1,12 +1,11 @@
 int getInternalCurrent()
 {
-  int adcVal_curr;
-  adcVal_curr = analogRead(CURR_SENSOR);
-  double curr_count = (adcVal_curr*(3.3/1024)); //convert ADC current value to Vout value.
-  double current = (0.11/(adcVal_curr - 1.65)); //Current (A).
-  double currVal3 = (3.33*(adcVal_curr/1024));  //
-  double currVal5 = (5*(currVal3/3.3));
-  /*if (currVal5 < MIN_SAFE_CURR)
+  int sensorValue;
+  double sensorVoltage;
+  sensorValue = analogRead(CURR_SENSOR);
+  sensorVoltage = ((double)sensorValue/RES)*V_TEENSY; 
+  current = ((sensorVoltage - 1.65)/.11); 
+  /*if (current < MIN_SAFE_CURR)// do we have min or max safe value
    *  return 0;
    *else
    *  return 1;
@@ -15,22 +14,26 @@ int getInternalCurrent()
 
 int getInternalTemp()
 {
-  int adcVal_temp;
-  adcVal_temp = analogRead(TEMPERATURE_SENSOR);
-  double temp_count=(1.65*(adcVal_temp/1024)+.1);  //convert ADC temp value to Vout value.          
-  double temp = ((temp_count-.5)/.01);   //Temp in C.
-   /*if (temp > MAX_SAFE_TEMP)
-   *  return 0;
-   *else
-   *  return 1;
-   */
+  int sensorValue;
+  double sensorVoltage;
+  sensorValue = analogRead(TEMPERATURE_SENSOR);
+  sensorVoltage=((double)sensorValue/RES)*V_TEENSY;           
+  temperature = ((sensorVoltage-.5)/.01);  
+  if (temperature > MAX_SAFE_TEMP)
+    return 0;
+  else
+    return 1;
 }
 
 int getInternalPressure()
 {
-  int adcVal_inPress;
-  adcVal_inPress= analogRead(INT_PRESS_SENSOR);
-  //double pressure = (((currVal5/5.1)+.04)/(0.004)); //why is currVal used here?
+  int sensorValue;
+  double sensorVoltage5;
+  double sensorVoltage3;
+  sensorValue= analogRead(INT_PRESS_SENSOR);
+  sensorVoltage5 = ((double)sensorValue/RES)*V_SUPPLY;
+  sensorVoltage3 = ((sensorVoltage5*V_TEENSY)/V_SUPPLY);
+  pressure = ((((sensorVoltage3*1.5)/V_SUPPLY)+.04)/(0.004));
   /*if (pressure > MAX_SAFE_PRESS)
    *  return 0;
    *else
@@ -40,14 +43,26 @@ int getInternalPressure()
 
 int getInternalLeak()
 {
-  int adcVal_leak;
-  adcVal_leak= analogRead(LEAK_SENSOR);
-  double leak = (adcVal_leak* (3/4096)); //why is this 4096 not 1024?
-  /*if (leak > MIN_SAFE_LeakV (=3V))
-   *  return 0;
-   *else
-   *  return 1;
-   */
+  int sensorValue;
+  double leakVoltage;
+  sensorValue= analogRead(LEAK_SENSOR);
+  leakVoltage = (sensorValue*(3.3/RES)); 
+  if (leakVoltage > MIN_SAFE_LEAK_V)
+    return 0;
+  else
+    return 1;
+}
+
+void TapSenseMonitor()
+{
+  digitalWrite(BATTERY_SENSOR_EN, HIGH);  //tapsense on
+  int tSense3 = analogRead(THIRD_CELL_READ);  //adc read cell 3
+  int tSense2 = analogRead(SECOND_CELL_READ); //adc read cell 2
+  int tSenseTop = analogRead(TOP_CELL_READ);  //adc read cell top
+  double tSense3_V = ((((double)tSense3*3)/RES)*5.99);      //Voltage cell 3. 
+  double tSense2_V = ((((double)tSense2*3)/RES)*5.99);      //Voltage of cell 2.
+  double tSenseTop_V = ((((double)tSenseTop*3)/RES)*5.99);  //Voltage of Top cell.
+  digitalWrite(BATTERY_SENSOR_EN, LOW);   //tapsense off
 }
 
 void checkSafetySensors()
