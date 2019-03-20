@@ -1,7 +1,7 @@
 void systemDiagnosis()
 {
-  if(radio.available())
-    radio.println(F("Running System Diagnostic"));
+  radio.println(F("Running System Diagnostic"));
+  //delay(SETUP_DELAY);
   checkRadio();
   checkGPS();
   checkSD();
@@ -33,9 +33,12 @@ void systemDiagnosis()
     radio.print(F("Internal pressure is above acceptable value!"));
     missionReady = false;
   }
+  getInternalLeak();
+  radio.print(F("Internal leak sensor detecting voltage of "));
+  radio.println(leakVoltage);
   if(getInternalLeak())
   {
-    radio.print(F("No leak detected."));
+    radio.println(F("No leak detected."));
   }
   else
   {

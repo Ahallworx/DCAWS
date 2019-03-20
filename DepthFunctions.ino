@@ -24,12 +24,6 @@ void setTargetDepth(int count)
     targetDepth = targetDepth3;  
 }
 
-void logDepth()
-{
-  File DCAWS_Depth = SD.open("DCAWS_Depth.csv", FILE_WRITE);  
-  DCAWS_Depth.println(depth);
-  DCAWS_Depth.close();  ////////////////////////////////////////// MIGHT NOT WANT TO CLOSE AFTER EVERY LOG< BUT THEN WILL WE NEED FLUSH??
-}
 
 // 64-bit double-precision moving average
 // inputs:  latest depth (double), init (boolean)

@@ -4,10 +4,11 @@ void setupSolenoids()
   pinMode(SOLENOID_1, OUTPUT);
   pinMode(SOLENOID_2, OUTPUT);
   pinMode(SOLENOID_3, OUTPUT);
-  // write to low or closed
-  digitalWrite(SOLENOID_1, LOW);
-  digitalWrite(SOLENOID_2, LOW);
-  digitalWrite(SOLENOID_3, LOW);
+  // write to High or open so they can be compressed
+  digitalWrite(SOLENOID_1, HIGH);
+  digitalWrite(SOLENOID_2, HIGH);
+  digitalWrite(SOLENOID_3, HIGH);
+  radio.println(F("Solenoids setup"));/////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
 void takeSample(int count)
@@ -25,11 +26,12 @@ void takeSample(int count)
     initSample = false;
     sinceTrigger = 0;
  }
- if(sinceTrigger >= HOLD_TIME)
+ else if(sinceTrigger >= HOLD_TIME)
  {
   digitalWrite(solenoidPin, LOW);
   targetCount++;
-  sampleTaken = true;
+  initDepthHold = true; 
+  initSample = true;
  }
 }
 

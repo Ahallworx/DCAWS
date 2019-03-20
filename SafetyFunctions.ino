@@ -28,12 +28,12 @@ int getInternalTemp()
 int getInternalPressure()
 {
   int sensorValue;
-  double sensorVoltage5;
-  double sensorVoltage3;
+  double sensorVoltage;
+  double sensorVoltageOut;
   sensorValue= analogRead(INT_PRESS_SENSOR);
-  sensorVoltage5 = ((double)sensorValue/RES)*V_SUPPLY;
-  sensorVoltage3 = ((sensorVoltage5*V_TEENSY)/V_SUPPLY);
-  pressure = ((((sensorVoltage3*1.5)/V_SUPPLY)+.04)/(0.004));
+  sensorVoltage = (((double)sensorValue/RES)*V_TEENSY)*1.5;
+  //sensorVoltageOut = ((sensorVoltage/4.5)*(.9392*V_SUPPLY))+(.04*V_SUPPLY);
+  pressure = ((((sensorVoltage/*Out*/)/V_SUPPLY)+.04)/(0.004));
   /*if (pressure > MAX_SAFE_PRESS)
    *  return 0;
    *else
@@ -44,10 +44,9 @@ int getInternalPressure()
 int getInternalLeak()
 {
   int sensorValue;
-  double leakVoltage;
   sensorValue= analogRead(LEAK_SENSOR);
   leakVoltage = (sensorValue*(3.3/RES)); 
-  if (leakVoltage > MIN_SAFE_LEAK_V)
+  if (leakVoltage < MIN_SAFE_LEAK_V)
     return 0;
   else
     return 1;
@@ -67,17 +66,32 @@ void TapSenseMonitor()
 
 void checkSafetySensors()
 {
+  errorString = "";
   if(!getInternalCurrent())
   {
     state = ABORT;
+    radio.println("Current too low");
     //log cause of error here
+    errorString += "Current too low";
   }
   if(!getInternalTemp())
+  {
+    radio.println("Internal Temp too high");
     state = ABORT;
+    errorString += "Internal Temp too high";
+  } 
   if(!getInternalPressure())
+  {
+    radio.println("Internal Pressure too low");
     state = ABORT;
-  if(getInternalLeak())
+    errorString += "Internal Pressure too low";
+  }
+  if(!getInternalLeak())///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  {
+    radio.println("leak");
     state = ABORT;
-  //include power here
+    errorString += "Leak detected";
+  }
+  //include power here errorString += "Power too low";
 }
 
