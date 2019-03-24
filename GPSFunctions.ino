@@ -33,9 +33,9 @@ void getGPS()
 void checkGPS()
 {
   gpsTimeout = 0;
-  while(!newGPS || initCheckGPS)
+  getGPS();
+  while(!newGPS)
   {
-    initCheckGPS = false;
     getGPS();
     if(gpsTimeout > MAX_GPS_TIME)
     {

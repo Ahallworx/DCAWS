@@ -19,7 +19,7 @@ Servo servo;
 //declare variables
 File dcawsLog;                        // Create file on the sd card to log depth
 bool missionReady = true;                // Create bool to track mission status through diagnostics
-bool initCheckGPS = true;
+bool initLog = true;
 bool newGPS = false;
 int goodGPSCount = 0;
 double depth;                            // variable to hold depth
@@ -45,9 +45,12 @@ double avgLat;
 double avgLon;
 int targetCount = 1;
 int targetDepth;
-int targetDepth1 = 10 + OFFSET;
-int targetDepth2 = 15 + OFFSET;
-int targetDepth3 = 20 + OFFSET;
+float td1;
+float td2;
+float td3;
+float targetDepth1;
+float targetDepth2;
+float targetDepth3;
 float pidError = 0;
 float Fb = (M*g) + FBPOS;               // calculate total buoyancy force of system
 float thrust;
@@ -82,7 +85,8 @@ void setup()
   //prior to deployment conduct system Diagnosis and wait for user command to continue
   while(go != 'y')
   { 
-    //run a system diagnostic 
+    //Retrieve user input depths and run a system diagnostic
+    getTargetDepths(); 
     systemDiagnosis();
     radio.print(F("Send 'y' (yes) to begin mission "));
     radio.println(F("or enter any other key to rerun diagnostic."));
@@ -139,11 +143,15 @@ void loop()
   switch (state)
   {
     case GPS_DRIFT:
+      //radio.println(sinceStart);
       if (sinceStart < GPS_DRIFT_TIME)
       {
+        radio.println("since start less than gps drift time");
         getGPS();
+        radio.println(newGPS);
         if (newGPS)
         {
+          radio.println("got new gps");
           // Calculate the moving average and set the init flag to false
           mvavgGPS((double) GPS.latitude, (double) GPS.longitude, avgInitGPS);
           avgInitGPS = false;
@@ -156,7 +164,7 @@ void loop()
           newGPS = false;
         }
       }
-      else if (sinceStart > GPS_DRIFT_TIME && (initGPS || (goodGPSCount < MIN_GPS_NUM)))
+      else if ((sinceStart > GPS_DRIFT_TIME && initGPS) || (goodGPSCount < MIN_GPS_NUM))
       {
           // abort if times out before getting first value or enough good values
           errorString += "GPS timed out or recieved too few usable signals";
@@ -168,7 +176,7 @@ void loop()
         if (newGPS)
         {
           sendGPS();
-          state = SAMPLE_MISSION;
+          state = GPS_FINAL;//SAMPLE_MISSION;
         }
         checkSafetySensors();
       }
@@ -212,7 +220,7 @@ void loop()
 
     case GPS_FINAL:
       getGPS();
-      if (GPS.fix)
+      if (newGPS /*GPS.fix*/)
       {
         if (initGPS)
         {

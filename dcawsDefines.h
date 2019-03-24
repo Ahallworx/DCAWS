@@ -1,4 +1,6 @@
-
+/* 
+ * Constants for DCAWS code
+ */
 
 // declare serial constants
 #define GPS_Serial Serial3
@@ -24,6 +26,8 @@
 #define chipSelect BUILTIN_SDCARD
 
 //declare constants
+#define MAX_TD 25.0
+#define MIN_TD 5.0
 #define OFFSET .6606                      // distance between pressure sensor and solenoid inlets
 #define STOP_SIGNAL 1500                  // PWM signal that stops thruster
 #define SETUP_DELAY 1000                  // time delay for setup signals
