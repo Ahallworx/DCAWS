@@ -10,7 +10,8 @@ void setupGPS()
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
   // Request updates on antenna status
   GPS.sendCommand(PGCMD_ANTENNA);
-  delay(1000/*SETUP_DELAY*/);
+  delay(SETUP_DELAY);
+  //radio.println(F("GPS setup"));
 }
 
 void getGPS()
@@ -32,14 +33,15 @@ void getGPS()
 void checkGPS()
 {
   gpsTimeout = 0;
-  while(!newGPS)
+  while(!newGPS || initCheckGPS)
   {
+    initCheckGPS = false;
     getGPS();
     if(gpsTimeout > MAX_GPS_TIME)
     {
       radio.println(F("Unable to confirm GPS Fix!"));
       missionReady = false;
-      break;
+      return;
     }
   }
   radio.println(F("GPS Fix confirmed."));
@@ -57,20 +59,11 @@ void sendGPS()
   radio.println(avgLon,6);
 }
 
-void logGPS()
-{
-  File DCAWS_GPS = SD.open("DCAWS_GPS.csv", FILE_WRITE);
-  DCAWS_GPS.print(avgLat,6);
-  DCAWS_GPS.print(", ");
-  DCAWS_GPS.println(avgLon,6);
-  DCAWS_GPS.close(); /////////////////////////////////////////////////maybe don't close, flush
-}
 
 void mvavgGPS(double lat, double lon, boolean mvInit)
 {
   // These static variables are kept in memory at all time
   // and can only be used by this function
-  double latBuffer[WINSZ_GPS], lonBuffer[WINSZ_GPS];
   static double latSum, lonSum;    // cumulated latitudes/longitudes
   static int n;   // actual window size
   static int k;   // circular buffer index
@@ -114,6 +107,6 @@ void mvavgGPS(double lat, double lon, boolean mvInit)
     }
   }
   // Calculate and return the moving average
-  /**latmean*/avgLat = latSum / (double)n;
-  /**lonmean*/avgLon = lonSum / (double)n;
+  avgLat = latSum / (double)n;
+  avgLon = lonSum / (double)n;
 }

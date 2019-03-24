@@ -2,7 +2,6 @@ void getDepth()
 {
   int sensorValue;
   double sensorVoltage;
-  double scaledVoltage;
   double pressurePsiAbs;
   double pressurePsiGage;
   double pressurePa;
@@ -24,12 +23,6 @@ void setTargetDepth(int count)
     targetDepth = targetDepth3;  
 }
 
-void logDepth()
-{
-  File DCAWS_Depth = SD.open("DCAWS_Depth.csv", FILE_WRITE);  
-  DCAWS_Depth.println(depth);
-  DCAWS_Depth.close();  ////////////////////////////////////////// MIGHT NOT WANT TO CLOSE AFTER EVERY LOG< BUT THEN WILL WE NEED FLUSH??
-}
 
 // 64-bit double-precision moving average
 // inputs:  latest depth (double), init (boolean)
@@ -38,7 +31,6 @@ void mvavgDepth(double z,boolean mvInit)
 {
   // These static variables are kept in memory at all time
   // and can only be used by this function
-  double zBuffer[WINSZ_Z];
   static double zSum;    // cumulated depth
   static int n;   // actual window size
   static int k;   // circular buffer index

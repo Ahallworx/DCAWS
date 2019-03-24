@@ -1,7 +1,6 @@
 void systemDiagnosis()
 {
-  if(radio.available())
-    radio.println(F("Running System Diagnostic"));
+  radio.println(F("Running System Diagnostic"));
   checkRadio();
   checkGPS();
   checkSD();
@@ -33,6 +32,9 @@ void systemDiagnosis()
     radio.print(F("Internal pressure is above acceptable value!"));
     missionReady = false;
   }
+  getInternalLeak();
+  radio.print(F("Internal leak sensor detecting voltage of "));
+  radio.println(leakVoltage);
   if(getInternalLeak())
   {
     radio.print(F("No leak detected."));
@@ -40,6 +42,22 @@ void systemDiagnosis()
   else
   {
     radio.print(F("Leak detected!"));
+    missionReady = false;
+  }
+  tapSenseMonitor();
+  radio.print(F("Internal tap sense detecting voltages of "));
+  radio.print(tSense3Voltage);
+  radio.print(",");
+  radio.print(tSense2Voltage);
+  radio.print(",");
+  radio.println(tSenseTopVoltage);
+  if(tapSenseMonitor())
+  {
+    radio.print(F("No low cell detected."));
+  }
+  else
+  {
+    radio.print(F("Low cell detected!"));
     missionReady = false;
   }
   if(missionReady)
