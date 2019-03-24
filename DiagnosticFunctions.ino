@@ -1,9 +1,8 @@
 void systemDiagnosis()
 {
   radio.println(F("Running System Diagnostic"));
-  checkRadio();
-  checkGPS();
   checkSD();
+  checkGPS();
   checkThruster();
   getDepth();
   radio.print(F("Depth sensor detecting depth of "));

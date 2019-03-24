@@ -12,7 +12,26 @@ void getDepth()
   pressurePa = pressurePsiGage*6894.76; //convert psi to pascal
   depth = pressurePa/(RHO*g);
 }
-
+void getTargetDepths()
+{
+  radio.println("send the three desired sampling depths in descending order followed by a 'k'");
+  while(!radio.available())
+  {
+  }
+  td1 = constrain(radio.parseFloat(), MIN_TD, MAX_TD);
+  td2 = constrain(radio.parseFloat(), MIN_TD, MAX_TD);
+  td3 = constrain(radio.parseFloat(), MIN_TD, MAX_TD);
+  if(radio.read() == 'k')
+  {
+    targetDepth1 = td1 + OFFSET;
+    targetDepth2 = td2 + OFFSET;
+    targetDepth3 = td3 + OFFSET;
+  }
+  while(radio.available())
+  {
+    radio.read();
+  }
+}
 void setTargetDepth(int count)
 {
   if(count == 1)
