@@ -1,6 +1,13 @@
 void calculatePID()
 {
   float Kp = 0, Ki = 0, Kd = 0;
+  /*
+   * //IF NEEDS EXTRA FORCE TO BREAK SURFACE
+   * if(depth < whatever depth it breaks at)
+   * {
+   *  Kp = 2;
+   * }
+   */
   static float pTerm, iTerm, dTerm;
   float zDot;
   float zDoubledot;

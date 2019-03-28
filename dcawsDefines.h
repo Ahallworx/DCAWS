@@ -54,16 +54,16 @@
 #define KI .225
 #define KD 10
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define FBPOS 4.35                          // positive buoyancy of system
+#define FBPOS 6.18                          // positive buoyancy of system
 #define A .09                            // Area of attack of system (m^2)
-#define CD .38                           //the drag coefficient of system from solidworks
+#define CD .4                           //the drag coefficient of system from solidworks
 #define M 10.5                           // Mass of system (kg)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define T_GAIN 39.84063745
-#define MIN_PWM 1525
+#define MIN_PWM 1575
 #define MAX_PWM 1900
 #define HOLD_TIME  10000                 //hold time of ten seconds for depth and sample
 #define SURF_NUM 10                      //number of times for pressure sensor to read surface value before claiming surface
-#define GPS_SEND_FREQ 50000
+#define GPS_SEND_FREQ 5000
 
 

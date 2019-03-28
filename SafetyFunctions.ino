@@ -55,12 +55,13 @@ int getInternalLeak()
 int tapSenseMonitor()
 {
   int tSense3 = analogRead(THIRD_CELL_READ);  //adc read cell 3
-  int tSense2 = analogRead(SECOND_CELL_READ); //adc read cell 2
-  int tSenseTop = analogRead(TOP_CELL_READ);  //adc read cell top
+  //int tSense2 = analogRead(SECOND_CELL_READ); //adc read cell 2
+  //int tSenseTop = analogRead(TOP_CELL_READ);  //adc read cell top
+  //radio.println(TOP_CELL_READ);
   tSense3Voltage = ((((double)tSense3*V_TEENSY)/RES)*5.99);      //Voltage cell 3. 
-  tSense2Voltage = ((((double)tSense2*V_TEENSY)/RES)*5.99);      //Voltage of cell 2.
-  tSenseTopVoltage = ((((double)tSenseTop*V_TEENSY)/RES)*5.99);  //Voltage of Top cell.
-  if(tSense3Voltage < MIN_SAFE_TSENSE || tSense2Voltage < MIN_SAFE_TSENSE || tSenseTopVoltage < MIN_SAFE_TSENSE)
+  //tSense2Voltage = ((((double)tSense2*V_TEENSY)/RES)*5.99);      //Voltage of cell 2.
+  //tSenseTopVoltage = ((((double)tSenseTop*V_TEENSY)/RES)*5.99);  //Voltage of Top cell.
+  if(tSense3Voltage < MIN_SAFE_TSENSE /*|| tSense2Voltage < MIN_SAFE_TSENSE || tSenseTopVoltage < MIN_SAFE_TSENSE*/)
     return 0;
   else
     return 1;
@@ -80,11 +81,11 @@ void checkSafetySensors()
     state = ABORT;
     errorString += "Internal Temp too high";
   } 
-  if(!getInternalPressure())
-  {
-    state = ABORT;
-    errorString += "Internal Pressure too low";
-  }
+//  if(!getInternalPressure())
+//  {
+//    state = ABORT;
+//    errorString += "Internal Pressure too low";
+//  }
   if(!getInternalLeak())
   {
     state = ABORT;

@@ -61,7 +61,7 @@ float prevDepth = 0;
 int surfaceCount = 0;
 
 // declare state machine variables
-enum {GPS_DRIFT, ASCENT, SAMPLE_MISSION, GPS_FINAL, ABORT} state;
+enum {GPS_DRIFT, ASCENT, SAMPLE_MISSION, GPS_FINAL, ABORT, SURFACE_BREAK} state;
 
 // declare timer
 IntervalTimer timerDepth;
@@ -90,6 +90,10 @@ void setup()
     systemDiagnosis();
     radio.print(F("Send 'y' (yes) to begin mission "));
     radio.println(F("or enter any other key to rerun diagnostic."));
+    while(radio.available())
+    {
+      radio.read();
+    }
     while(!radio.available())
     {
     } 
@@ -97,8 +101,10 @@ void setup()
   }
   // change to GPS Drift state
   state = GPS_DRIFT;
+  if((td1 ==5) && (td2 ==5) && (td3 ==5))
+  state = SURFACE_BREAK;
   // begin depth interval timer
-  timerDepth.begin(getDepth, 10000);
+ // timerDepth.begin(getDepth, 10000);
 
 }
 
@@ -117,15 +123,16 @@ void loop()
   if(!lowPow)
   {
     //pause interrupts and make copy of current depth reading
-    noInterrupts();
-    depthCopy = depth;
-    interrupts();
+//    noInterrupts();
+//    depthCopy = depth;
+//    interrupts();
+    getDepth();
     // average pressure (not sure if moving avg right)
-    mvavgDepth(depthCopy, avgInitZ);
+    mvavgDepth(depth, avgInitZ);
     avgInitZ = false;
     // update depth log (and set depth for pid) at rate of 10Hz
     dataString = "";
-    dataString = String(sinceDataFreq)+ "," + String(depthCopy)+ "," + String(avgDepth);
+    dataString = String(sinceDataFreq)+ "," + String(depth)+ "," + String(avgDepth);
     if(state == GPS_DRIFT || state == GPS_FINAL)
       dataString += "," + String(GPS.latitude)+ "," + String(GPS.longitude)+ "," + String(avgLat)+ "," + String(avgLon);
     if(state == ABORT)
@@ -144,14 +151,14 @@ void loop()
   {
     case GPS_DRIFT:
       //radio.println(sinceStart);
-      if (sinceStart < GPS_DRIFT_TIME)
+      if (sinceStart < GPS_DRIFT_TIME || initGPS)
       {
-        radio.println("since start less than gps drift time");
+        //radio.println("since start less than gps drift time");
         getGPS();
-        radio.println(newGPS);
+        //radio.println(newGPS);
         if (newGPS)
         {
-          radio.println("got new gps");
+          //radio.println("got new gps");
           // Calculate the moving average and set the init flag to false
           mvavgGPS((double) GPS.latitude, (double) GPS.longitude, avgInitGPS);
           avgInitGPS = false;
@@ -176,7 +183,9 @@ void loop()
         if (newGPS)
         {
           sendGPS();
-          state = GPS_FINAL;//SAMPLE_MISSION;
+          state = SAMPLE_MISSION;
+          //for testing when switching directly to GPS_FINAL reinitialize initGPS here
+          //initGPS = true;
         }
         checkSafetySensors();
       }
@@ -188,7 +197,7 @@ void loop()
       sendPIDSignal();
       if (initDepthHold)
       {
-        if (prevError <= HOLD_TOL && pidError <= HOLD_TOL)
+        if (prevError <= HOLD_TOL && pidError <= HOLD_TOL)///////////////////////////////////////////////////////////
         {
           sinceErrorInTol = 0;
           initDepthHold = false;
@@ -220,7 +229,7 @@ void loop()
 
     case GPS_FINAL:
       getGPS();
-      if (newGPS /*GPS.fix*/)
+      if (newGPS)
       {
         if (initGPS)
         {
@@ -255,6 +264,36 @@ void loop()
         logData();
         state = ASCENT;
       }
+    break;
+
+    case SURFACE_BREAK:
+        double timeValue;
+        bool newTime = false;
+        if (radio.available() > 0) 
+        {
+          int signal = radio.parseInt();  // Set signal value, which should be between 1100 and 1900
+          if(radio.read() == 'm')
+          {
+            signal = constrain(signal, 1100, 1900);
+            radio.println(signal);          // Print back parsed signal value.
+            servo.writeMicroseconds(signal); // Send signal to ESC.
+            elapsedMillis timeToDescend;
+//            if(timeToDescend < 30000)
+//            {
+              while(getDepth2() < 5)
+              {
+                timeValue = timeToDescend;
+              }
+              newTime = true;
+              servo.writeMicroseconds(1500); // Send signal to ESC.
+//            }
+          }  
+        }
+        if(newTime)
+        {
+         radio.print("time");
+         radio.println(timeValue); 
+        }
     break;
   }
 }

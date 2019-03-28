@@ -21,7 +21,7 @@ void getGPS()
   {
     if(GPS.parse(GPS.lastNMEA()))
     {
-      if(GPS.fix)
+      if((GPS.latitude !=0.0) && (GPS.longitude != 0.0))
       {
         newGPS = true;
         goodGPSCount++;
