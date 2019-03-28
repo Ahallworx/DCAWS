@@ -17,7 +17,11 @@ void setupSolenoids()
     {
       digitalWrite(SOLENOID_1, HIGH);
       digitalWrite(SOLENOID_2, HIGH);
-      digitalWrite(SOLENOID_3, HIGH);   
+      digitalWrite(SOLENOID_3, HIGH);
+      while(radio.available())
+      {
+        radio.read();
+      }   
     }
   }
   // close solenoids

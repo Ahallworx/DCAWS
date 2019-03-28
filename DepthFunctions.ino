@@ -14,13 +14,23 @@ void getDepth()
 }
 void getTargetDepths()
 {
-  radio.println("send the three desired sampling depths in descending order followed by a 'k'");
+  radio.println("send the three desired sampling depths in meters in descending order");
+  radio.println("leave a space between each value and type a 'k' before hitting enter");
+  radio.println("for boat test 3/26 send three values of 5 or below to conduct Surface Test");
+  while(radio.available())
+  {
+    radio.read();
+  }
   while(!radio.available())
   {
   }
   td1 = constrain(radio.parseFloat(), MIN_TD, MAX_TD);
   td2 = constrain(radio.parseFloat(), MIN_TD, MAX_TD);
   td3 = constrain(radio.parseFloat(), MIN_TD, MAX_TD);
+    radio.print(F("The three target depths are: "));
+    radio.print(td1); radio.print(" ");
+    radio.print(td2); radio.print(" ");
+    radio.println(td3);
   if(radio.read() == 'k')
   {
     targetDepth1 = td1 + OFFSET;
@@ -89,4 +99,20 @@ void mvavgDepth(double z,boolean mvInit)
   
   // Calculate and return the moving average
   avgDepth = zSum / (double)n;
+}
+
+double getDepth2()
+{
+  int sensorValue;
+  double sensorVoltage;
+  double pressurePsiAbs;
+  double pressurePsiGage;
+  double pressurePa;
+  sensorValue = analogRead(DEPTH_SENSOR);
+  sensorVoltage = (((double)sensorValue/RES)*V_TEENSY)*1.5;
+  pressurePsiAbs = ((sensorVoltage -.5)/4.0)*100.0;
+  pressurePsiGage = pressurePsiAbs - 14.7;
+  pressurePa = pressurePsiGage*6894.76; //convert psi to pascal
+  depth = pressurePa/(RHO*g);
+  return depth;
 }
