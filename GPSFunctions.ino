@@ -50,13 +50,11 @@ void checkGPS()
 void sendGPS()
 {
   radio.println(F("The current GPS coordinates are "));
-  radio.print(GPS.latitude,6);
-  radio.print(F(", "));
-  radio.println(GPS.longitude,6);
+  radio.print(GPS.latitude,8); radio.print(F(", "));                     //CHANGED 3/28 TO INCREASE DECIMAL ACCURACY OF GPS
+  radio.println(GPS.longitude,8);                                        //
   radio.println(F("The current averaged GPS coordinates are "));
-  radio.print(avgLat,6);
-  radio.print(F(", "));
-  radio.println(avgLon,6);
+  radio.print(avgLat,8); radio.print(F(", "));                           //
+  radio.println(avgLon,8);                                               //
 }
 
 

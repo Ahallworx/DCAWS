@@ -26,9 +26,9 @@
 #define chipSelect BUILTIN_SDCARD
 
 //declare constants
-#define MAX_TD 25.0
-#define MIN_TD 5.0
-#define OFFSET .6606                      // distance between pressure sensor and solenoid inlets
+#define MAX_TD 2.0
+#define MIN_TD 0.5
+#define OFFSET 0                      // distance between pressure sensor and solenoid inlets
 #define STOP_SIGNAL 1500                  // PWM signal that stops thruster
 #define SETUP_DELAY 1000                  // time delay for setup signals
 #define MAX_GPS_TIME 120000               // 2min cutoff for GPS to recieve new signal
@@ -48,19 +48,20 @@
 #define GPS_DRIFT_TIME 60000             // desired duration of drift state in milliseconds
 #define WINSZ_GPS 100                    // window size used for GPS of 100
 #define MIN_GPS_NUM  10                  // Minimum number of good gps readings taken during GPS_DRIFT to consider successful
-#define PID_RANGE -2                     // Range in m at which PID implements full control
+#define PID_RANGE -0.6                     // Range in m at which PID implements full control
 #define HOLD_TOL .2                      // declare tolerance on hold
 #define KP 2.6                           
 #define KI .225
 #define KD 10
+#define KP2 1.6
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define FBPOS 6.18                          // positive buoyancy of system
-#define A .09                            // Area of attack of system (m^2)
-#define CD .4                           //the drag coefficient of system from solidworks
+#define FBPOS 6.41                          // positive buoyancy of system
+#define A .0985                            // Area of attack of system (m^2)
+#define CD .8                           //the drag coefficient of system from solidworks
 #define M 10.5                           // Mass of system (kg)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define T_GAIN 39.84063745
-#define MIN_PWM 1575
+#define MIN_PWM 1525
 #define MAX_PWM 1900
 #define HOLD_TIME  10000                 //hold time of ten seconds for depth and sample
 #define SURF_NUM 10                      //number of times for pressure sensor to read surface value before claiming surface

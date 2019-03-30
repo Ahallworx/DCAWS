@@ -12,7 +12,7 @@ void systemDiagnosis()
   radio.println(current);
   if(!getInternalCurrent())
   {
-    radio.print(F("Internal current is below acceptable value!")); 
+    radio.println(F("Internal current is below acceptable value!")); 
     missionReady = false;
   }
   getInternalTemp();
@@ -20,7 +20,7 @@ void systemDiagnosis()
   radio.println(temperature);
   if(!getInternalTemp())
   { 
-    radio.print(F("Internal temperature is above acceptable value!"));
+    radio.println(F("Internal temperature is above acceptable value!"));
     missionReady = false;
   }
   getInternalPressure();
@@ -28,7 +28,7 @@ void systemDiagnosis()
   radio.println(pressure);
   if(!getInternalPressure())
   {
-    radio.print(F("Internal pressure is above acceptable value!"));
+    radio.println(F("Internal pressure is above acceptable value!"));
     missionReady = false;
   }
   getInternalLeak();
@@ -36,27 +36,25 @@ void systemDiagnosis()
   radio.println(leakVoltage);
   if(getInternalLeak())
   {
-    radio.print(F("No leak detected."));
+    radio.println(F("No leak detected."));
   }
   else
   {
-    radio.print(F("Leak detected!"));
+    radio.println(F("Leak detected!"));
     missionReady = false;
   }
   tapSenseMonitor();
   radio.print(F("Internal tap sense detecting voltages of "));
-  radio.print(tSense3Voltage);
-  radio.print(",");
-  radio.print(tSense2Voltage);
-  radio.print(",");
+  radio.print(tSense3Voltage); radio.print(F(" "));
+  radio.print(tSense2Voltage); radio.print(F(" "));
   radio.println(tSenseTopVoltage);
   if(tapSenseMonitor())
   {
-    radio.print(F("No low cell detected."));
+    radio.println(F("No low cell detected."));
   }
   else
   {
-    radio.print(F("Low cell detected!"));
+    radio.println(F("Low cell detected!"));
     missionReady = false;
   }
   if(missionReady)

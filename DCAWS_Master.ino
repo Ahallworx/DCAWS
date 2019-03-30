@@ -1,7 +1,7 @@
 // Alex Barker and Adam Hall
-// 3/22/2019
+// 3/29/2019
 // Code to run autonomous water sampler DCAWS
-// Changes from previous version: updated from tests, solenoid closing in setup, solenoid closing issue
+// Changes from previous version: No interrupts- getDepth in loop, updated from tests, added in absolute values, updated constants
 
 // include libraries
 #include <Adafruit_GPS.h>
@@ -22,7 +22,7 @@ bool missionReady = true;                // Create bool to track mission status 
 bool initLog = true;
 bool newGPS = false;
 int goodGPSCount = 0;
-double depth;                            // variable to hold depth
+double depth;                            // variable to hold depth                                  
 double current;                          // variable for internal current
 double temperature;                      // variable for internal temp
 double pressure;                         // variable for internal pressure
@@ -33,7 +33,6 @@ double tSenseTopVoltage;
 String dataString = "";
 String errorString = "";
 bool lowPow = false;
-double depthCopy;
 double avgDepth;                         // variable for avg Depth after going through moving average
 bool avgInitZ = true;                    // declare initial mvavg flag for depth true
 double zBuffer[WINSZ_Z];
@@ -59,13 +58,21 @@ bool initDepthHold = true;
 bool initSample = true;
 float prevDepth = 0;
 int surfaceCount = 0;
+bool initPID = true;
 
 // declare state machine variables
-enum {GPS_DRIFT, ASCENT, SAMPLE_MISSION, GPS_FINAL, ABORT, SURFACE_BREAK} state;
+enum {GPS_DRIFT, ASCENT, SAMPLE_MISSION, GPS_FINAL, ABORT} state;
 
-// declare timer
-IntervalTimer timerDepth;
 
+//create timers for mission
+elapsedMillis sinceStart;
+//create timer for PID control
+elapsedMillis sincePrev;
+//create timer for data renewal
+elapsedMillis sinceDataFreq;
+elapsedMillis sinceGPS;
+elapsedMillis sinceErrorInTol;
+elapsedMillis sinceTrigger;
 //declare elapsed timer to use for gpsTimeout
 elapsedMillis gpsTimeout;
 
@@ -100,39 +107,22 @@ void setup()
     go = (char)radio.read();   
   }
   // change to GPS Drift state
-  state = GPS_DRIFT;
-  if((td1 ==5) && (td2 ==5) && (td3 ==5))
-  state = SURFACE_BREAK;
-  // begin depth interval timer
- // timerDepth.begin(getDepth, 10000);
-
+  state = SAMPLE_MISSION; //GPS_DRIFT;
 }
-
-//create timers for mission
-elapsedMillis sinceStart;
-//create timer for PID control
-elapsedMillis sincePrev;
-//create timer for data renewal
-elapsedMillis sinceDataFreq;
-elapsedMillis sinceGPS;
-elapsedMillis sinceErrorInTol;
-elapsedMillis sinceTrigger;
 
 void loop()
 {
   if(!lowPow)
   {
     //pause interrupts and make copy of current depth reading
-//    noInterrupts();
-//    depthCopy = depth;
-//    interrupts();
     getDepth();
     // average pressure (not sure if moving avg right)
     mvavgDepth(depth, avgInitZ);
     avgInitZ = false;
     // update depth log (and set depth for pid) at rate of 10Hz
     dataString = "";
-    dataString = String(sinceDataFreq)+ "," + String(depth)+ "," + String(avgDepth);
+    dataString = String(state)+ "," + String(depth)+ "," + String(avgDepth);
+    dataString += "," + String(thrust);
     if(state == GPS_DRIFT || state == GPS_FINAL)
       dataString += "," + String(GPS.latitude)+ "," + String(GPS.longitude)+ "," + String(avgLat)+ "," + String(avgLon);
     if(state == ABORT)
@@ -150,12 +140,9 @@ void loop()
   switch (state)
   {
     case GPS_DRIFT:
-      //radio.println(sinceStart);
       if (sinceStart < GPS_DRIFT_TIME || initGPS)
       {
-        //radio.println("since start less than gps drift time");
         getGPS();
-        //radio.println(newGPS);
         if (newGPS)
         {
           //radio.println("got new gps");
@@ -184,8 +171,6 @@ void loop()
         {
           sendGPS();
           state = SAMPLE_MISSION;
-          //for testing when switching directly to GPS_FINAL reinitialize initGPS here
-          //initGPS = true;
         }
         checkSafetySensors();
       }
@@ -197,7 +182,7 @@ void loop()
       sendPIDSignal();
       if (initDepthHold)
       {
-        if (prevError <= HOLD_TOL && pidError <= HOLD_TOL)///////////////////////////////////////////////////////////
+        if ((abs(prevError) <= HOLD_TOL) && (abs(pidError) <= HOLD_TOL))
         {
           sinceErrorInTol = 0;
           initDepthHold = false;
@@ -207,8 +192,6 @@ void loop()
       {
           takeSample(targetCount);
       }
-      prevError = pidError;
-      prevDepth = pidDepth;
       if (targetCount > 3)
         state = ASCENT;
       break;
@@ -251,7 +234,6 @@ void loop()
          lowPow = true;
          //turn off servo
          servo.writeMicroseconds(STOP_SIGNAL);
-         noInterrupts();
          //stop logging? (log low power, then somehow permanently close)
          logData();
          dcawsLog.close();
@@ -264,36 +246,6 @@ void loop()
         logData();
         state = ASCENT;
       }
-    break;
-
-    case SURFACE_BREAK:
-        double timeValue;
-        bool newTime = false;
-        if (radio.available() > 0) 
-        {
-          int signal = radio.parseInt();  // Set signal value, which should be between 1100 and 1900
-          if(radio.read() == 'm')
-          {
-            signal = constrain(signal, 1100, 1900);
-            radio.println(signal);          // Print back parsed signal value.
-            servo.writeMicroseconds(signal); // Send signal to ESC.
-            elapsedMillis timeToDescend;
-//            if(timeToDescend < 30000)
-//            {
-              while(getDepth2() < 5)
-              {
-                timeValue = timeToDescend;
-              }
-              newTime = true;
-              servo.writeMicroseconds(1500); // Send signal to ESC.
-//            }
-          }  
-        }
-        if(newTime)
-        {
-         radio.print("time");
-         radio.println(timeValue); 
-        }
     break;
   }
 }
