@@ -59,9 +59,15 @@ bool initSample = true;
 float prevDepth = 0;
 int surfaceCount = 0;
 bool initPID = true;
+int signalESCP;
+
+  float Kp; 
+  float Ki; 
+  float Kd;
+  static float pTerm, iTerm, dTerm;
 
 // declare state machine variables
-enum {GPS_DRIFT, ASCENT, SAMPLE_MISSION, GPS_FINAL, ABORT} state;
+enum {GPS_DRIFT, ASCENT, SAMPLE_MISSION, GPS_FINAL, ABORT, DATA} state;
 
 
 //create timers for mission
@@ -106,6 +112,7 @@ void setup()
     } 
     go = (char)radio.read();   
   }
+  pidError = pidDepth - targetDepth;  //WHY HERE? to set initial error?
   // change to GPS Drift state
   state = SAMPLE_MISSION; //GPS_DRIFT;
 }
@@ -121,8 +128,8 @@ void loop()
     avgInitZ = false;
     // update depth log (and set depth for pid) at rate of 10Hz
     dataString = "";
-    dataString = String(state)+ "," + String(depth)+ "," + String(avgDepth);
-    dataString += "," + String(thrust);
+    dataString = String(state)+ "," + String(depth)+ "," + String(pidDepth)+ "," + String(targetDepth)+ "," + String(signalESCP);
+    dataString += "," + String(thrust)+"," + errorString;
     if(state == GPS_DRIFT || state == GPS_FINAL)
       dataString += "," + String(GPS.latitude)+ "," + String(GPS.longitude)+ "," + String(avgLat)+ "," + String(avgLon);
     if(state == ABORT)
@@ -135,6 +142,10 @@ void loop()
       pidDepth = avgDepth;
       checkSafetySensors();
       sinceDataFreq = 0;
+      
+      Serial.println(dataString);
+//      Serial.println(pidError);
+//      Serial.println(thrust);
     }
   }
   switch (state)
@@ -177,23 +188,35 @@ void loop()
     break;
 
     case SAMPLE_MISSION:
-      setTargetDepth(targetCount);
+//setTargetDepth(targetCount);
+      unsigned long smStartTime, smPrevTime;
+      double smElapsedTime;
+      
+      smStartTime = sinceStart;   //get current time
+      smElapsedTime = (double)(smStartTime - smPrevTime); //compute time elapsed from previous compute.
+      targetDepth = 2; //asign target depth to hold at.
       calculatePID();
       sendPIDSignal();
-      if (initDepthHold)
-      {
-        if ((abs(prevError) <= HOLD_TOL) && (abs(pidError) <= HOLD_TOL))
-        {
-          sinceErrorInTol = 0;
-          initDepthHold = false;
-        }
-      }
-      else if (sinceErrorInTol >= HOLD_TIME)
-      {
-          takeSample(targetCount);
-      }
-      if (targetCount > 3)
-        state = ASCENT;
+      
+//      if (initDepthHold)
+//      {
+//        if ((abs(prevError) <= HOLD_TOL) && (abs(pidError) <= HOLD_TOL))
+//        {
+//          sinceErrorInTol = 0;
+//          initDepthHold = false;
+//        }
+//      }
+//      else if (sinceErrorInTol >= HOLD_TIME)
+//      {
+//          takeSample(targetCount);
+//      }
+//      if (targetCount > 3)
+        //state = ASCENT;
+        smPrevTime = smStartTime;     //remember current time
+        if(smElapsedTime <= 60000)    //stay in SAMPLE_MISSION state 
+        state = SAMPLE_MISSION;
+        if(smElapsedTime >= 60000)    //switch to DATA state
+        state = DATA;
       break;
 
     case ASCENT:
@@ -246,6 +269,14 @@ void loop()
         logData();
         state = ASCENT;
       }
+    break;
+    
+    case DATA:
+      checkRadio();
+      checkSD();
+      
+      state = DATA;
+      
     break;
   }
 }

@@ -35,5 +35,6 @@ void sendPIDSignal()
   if(signalESC > MAX_PWM)
     signalESC = MAX_PWM;
   servo.writeMicroseconds(signalESC);
+  signalESCP=signalESC;
 }
 
